@@ -23,6 +23,7 @@ import spotipy
 import os
 from spotipy.oauth2 import SpotifyClientCredentials
 
+#ENVIRON SETUP + CONSTANTS
 f = open("BPMkeys.txt", "r")
 cid = f.readline().split('\n')[0]
 secret = f.readline().split('\n')[0]
@@ -39,14 +40,36 @@ COUNT = 0
 PLAYLIST = []
 #Each entry in PLAYLIST should be a dict with {'name':,'artist':,'id':,'tempo':}
 
-songs = sp.playlist_items(polyurl)
-results = songs['items']
-print(f"Call {COUNT} returned {len(results)} number of tracks")
+#FUNCTIONS
+def getPlaylist(sp, polyurl):
+	offset = 0
+	songdict = {}
+	results = []
+	while(len(results)<1427):
+		songs = sp.playlist_items(polyurl,offset = offset)
+		results_new = songs['items']
+		for res in results_new:
+			results.append(res)
+		offset = offset + 100
 
-for i in range(1):
-	#print(results[i])
-	print(results[i].get('track').get('id'))
-	print(results[i].get('track').get('name'))
-	print(results[i].get('track').get('artists')[0].get('name'))
+	for i in range(len(results)):
+		songname = results[i].get('track').get('name')
+		songid = results[i].get('track').get('id')
+		songfirstartist = results[i].get('track').get('artists')[0].get('name')
+
+		songdict = {'name':songname,'artist':songfirstartist,'id':songid}
+		print(songdict)
+		PLAYLIST.append(songdict)
+
+def getPlaylistTempo(sp):
+
+
+#MAIN
+if __name__ == '__main__':
+	getPlaylist(sp, polyurl)
+	getPlaylistTempo(sp)
+	print(f"Your playlist has {len(PLAYLIST)} songs.")
+	
+
 
 
