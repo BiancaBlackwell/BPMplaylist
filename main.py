@@ -1,27 +1,3 @@
-# import spotipy
-# from spotipy.oauth2 import SpotifyClientCredentials
-# from spotipy.oauth2 import SpotifyOAuth
-# import pandas as pd
-
-
-# def spotify_init():
-# 	f = open("BPMkeys.txt", "r")
-# 	cid = f.readline().split('\n')[0]
-# 	secret = f.readline().split('\n')[0]
-# 	auth = f.readline().split('\n')[0]
-# 	f.close()
-
-# 	# client_credentials_manager = SpotifyClientCredentials(client_id=cid, client_secret=secret)
-# 	# sp = spotipy.Spotify(client_credentials_manager = client_credentials_manager)
-# 	scope = "user-library-read"
-
-# 	sp = spotipy.Spotify(client_id = cid, client_secret = secret, auth_manager=SpotifyOAuth(scope=scope))
-# 	#track_results = sp.search(q='year:2018', type='track', limit=50)
-# 	#print(track_results)
-# 	return sp
-
-
-
 # if __name__ == '__main__':
 # 	sp = spotify_init()
 # 	results = sp.current_user_saved_tracks()
@@ -59,11 +35,18 @@ os.environ['SPOTIPY_CLIENT_SECRET'] = secret
 polyurl = 'spotify:playlist:61Pqpnx6Nz57snNE3mVnRH'
 sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
 
+COUNT = 0
+PLAYLIST = []
+#Each entry in PLAYLIST should be a dict with {'name':,'artist':,'id':,'tempo':}
+
 songs = sp.playlist_items(polyurl)
-while songs:
-    for i, playlist in enumerate(songs['items']):
-        print("%4d %s %s" % (i + 1 + songs['offset'],  songs['name']))
-    if songs['next']:
-        songs = sp.next(songs)
-    else:
-        songs = None
+results = songs['items']
+print(f"Call {COUNT} returned {len(results)} number of tracks")
+
+for i in range(1):
+	#print(results[i])
+	print(results[i].get('track').get('id'))
+	print(results[i].get('track').get('name'))
+	print(results[i].get('track').get('artists')[0].get('name'))
+
+
