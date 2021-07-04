@@ -21,6 +21,8 @@
 
 import spotipy
 import os
+import math
+import csv
 from spotipy.oauth2 import SpotifyClientCredentials
 
 #ENVIRON SETUP + CONSTANTS
@@ -42,6 +44,8 @@ PLAYLIST = []
 
 #FUNCTIONS
 def getPlaylist(sp, polyurl):
+	#Load the PLAYLIST variable with all songs name,artist, and id from the desired playlist polyurl 
+	#Max limit is 100 per query, so loop the query and increase the offset each time
 	offset = 0
 	songdict = {}
 	results = []
@@ -62,13 +66,65 @@ def getPlaylist(sp, polyurl):
 		PLAYLIST.append(songdict)
 
 def getPlaylistTempo(sp):
+	#Load PLAYLIST variable full of tempo data (i.e, BPMs)
+	#MAX queries is 100, do in bulk to avoid a billion quieries to spotify.
+	playlistids = [] #make as many lists of 100 ids as need be to cover PLAYLIST
+	tempolist = []
+	for n in range(math.ceil(len(PLAYLIST)/100)):
+		newlist = []
+		for m in range(100):
+			if(len(PLAYLIST)-1 < n*100 + m):
+				break
+			nextid = PLAYLIST[n*100 + m].get('id')
+			newlist.append(nextid)
+		playlistids.append(newlist)
+		
+	for i in range(len(playlistids)):
+		#Query in 100-batch
+		songfeat = sp.audio_features(playlistids[i])
+		for j in range(100):
+			if(len(songfeat)-1 < j):
+				break
+			tempo = songfeat[j].get('tempo')
+			tempolist.append(tempo)
+
+	i = 0
+	for tempo in tempolist:
+		#now add it into PLAYLIST dict
+		PLAYLIST[i]['tempo'] = tempo
+		i = i + 1
+
+def savePlaylist():
+	with open('playlist.csv', 'w', encoding='utf8', newline='') as output_file:
+	    fc = csv.DictWriter(output_file, 
+	                        fieldnames=PLAYLIST[0].keys(),
+
+	                       )
+	    fc.writeheader()
+	    fc.writerows(PLAYLIST)
+
+def getTempo(sp,ident):
+	songfeat = sp.audio_features(ident)
+	tempo = songfeat[0].get('tempo')
+	return tempo
 
 
 #MAIN
 if __name__ == '__main__':
-	getPlaylist(sp, polyurl)
-	getPlaylistTempo(sp)
-	print(f"Your playlist has {len(PLAYLIST)} songs.")
+
+	#Initialize DataFile playlist.csv
+	#getPlaylist(sp, polyurl)
+	#getPlaylistTempo(sp)
+	#savePlaylist()
+	#print(f"Your playlist has {len(PLAYLIST)} songs.")
+
+	#Verify tempo correctness
+	#testsong = "We Are the Winx"
+	#ident = "62DhR27lWUHYHuD9A3zSrB"
+	#print(f"song: {testsong} has {getTempo(sp,ident)} tempo")
+
+	#Load playlist.csv Datafile
+	
 	
 
 
