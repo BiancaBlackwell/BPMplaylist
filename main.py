@@ -1,29 +1,10 @@
-# if __name__ == '__main__':
-# 	sp = spotify_init()
-# 	results = sp.current_user_saved_tracks()
-# 	for idx, item in enumerate(results['items']):
-# 	    track = item['track']
-# 	    print(idx, track['artists'][0]['name'], " – ", track['name'])
-
-
-# # artist_name = []
-# # track_name = []
-# # popularity = []
-# # track_id = []
-
-# # track_results = sp.search(q='year:2018', type='track', limit=5)
-
-# # track_dataframe = pd.DataFrame({'artist_name' : artist_name, 'track_name' : track_name, 'track_id' : track_id, 'popularity' : popularity})
-# # print(track_dataframe.shape)
-# # print(track_dataframe)
-# # track_dataframe.head()
-
-
 import spotipy
 import os
 import math
 import csv
 from spotipy.oauth2 import SpotifyClientCredentials
+import pandas as pd
+import numpy as np
 
 #ENVIRON SETUP + CONSTANTS
 f = open("BPMkeys.txt", "r")
@@ -109,6 +90,7 @@ def getTempo(sp,ident):
 	return tempo
 
 
+
 #MAIN
 if __name__ == '__main__':
 
@@ -124,7 +106,8 @@ if __name__ == '__main__':
 	#print(f"song: {testsong} has {getTempo(sp,ident)} tempo")
 
 	#Load playlist.csv Datafile
-	
+	df = pd.read_csv('playlist.csv')
+	print(df.head())
 	
 
 
