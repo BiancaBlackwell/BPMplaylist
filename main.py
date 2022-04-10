@@ -1,22 +1,32 @@
 import spotipy
+import fitbit
 import os
 import math
 import csv
+from datetime import datetime, timedelta
+from fitbit import gather_keys_oauth2 as Oauth2 #Had to copy/paste the gather_keys_oauth2.py into the fitbit folder
 from spotipy.oauth2 import SpotifyClientCredentials
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 #ENVIRON SETUP + CONSTANTS
 f = open("BPMkeys.txt", "r")
-cid = f.readline().split('\n')[0]
-secret = f.readline().split('\n')[0]
-auth = f.readline().split('\n')[0]
+#Spotify First
+cid_sp = f.readline().split('\n')[0]
+secret_sp = f.readline().split('\n')[0]
+auth_sp = f.readline().split('\n')[0]
+
+#Fitbit Second
+cid_fb = f.readline().split('\n')[0]
+secret_fb = f.readline().split('\n')[0]
+
 f.close()
 
-os.environ['SPOTIPY_CLIENT_ID'] = cid
-os.environ['SPOTIPY_CLIENT_SECRET'] = secret
+os.environ['SPOTIPY_CLIENT_ID'] = cid_sp
+os.environ['SPOTIPY_CLIENT_SECRET'] = secret_sp
 
-polyurl = 'spotify:playlist:61Pqpnx6Nz57snNE3mVnRH'
+polyurl = 'spotify:playlist:61Pqpnx6Nz57snNE3mVnRH' #Master Playlist URL
 sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
 
 COUNT = 0
@@ -76,7 +86,7 @@ def getPlaylistTempo(sp):
 		i = i + 1
 
 def savePlaylist():
-	with open('playlist.csv', 'w', encoding='utf8', newline='') as output_file:
+	with open('playlist_master.csv', 'w', encoding='utf8', newline='') as output_file:
 	    fc = csv.DictWriter(output_file, 
 	                        fieldnames=PLAYLIST[0].keys(),
 
@@ -89,6 +99,33 @@ def getTempo(sp,ident):
 	tempo = songfeat[0].get('tempo')
 	return tempo
 
+def playlistAnalysis(df):
+	#Graph BPM Information about given playlist
+	temp = df[['name','tempo']]
+	temp = temp.sort_values('tempo',ignore_index=True)
+	temp['row_no'] = temp.index
+	temp.plot(x = 'tempo', y = 'row_no', kind = 'scatter')
+	plt.show()
+	print(temp)
+	temp.to_csv('sorted.csv',index=False)	
+
+def fitbitAuthorize():
+	#Check: Do we need to do this every time we run, or when?
+	server = Oauth2.OAuth2Server(cid_fb, secret_fb)
+	server.browser_authorize()
+	ACCESS_TOKEN = str(server.fitbit.client.session.token['access_token'])
+	REFRESH_TOKEN = str(server.fitbit.client.session.token['refresh_token'])
+	auth2_client = fitbit.Fitbit(cid_fb, secret_fb, oauth2=True, access_token=ACCESS_TOKEN, refresh_token=REFRESH_TOKEN)
+	return auth2_client
+
+def fitbitWeekData(auth2_client):
+	#WIP: Figure out calling the activities list API properly
+	#Collect Activity Data from the Last Week
+	#endDate = datetime.now()
+	#startDate = endDate + timedelta(days=-7)
+	#print(endDate, startDate)
+
+	#print(auth2_client.activities_list(beforeDate=endDate, afterDate=startDate, sort='asc', limit=100, offset=0))
 
 
 #MAIN
@@ -100,15 +137,17 @@ if __name__ == '__main__':
 	#savePlaylist()
 	#print(f"Your playlist has {len(PLAYLIST)} songs.")
 
+	#Collect Full Fitbit HR & Exercise Data from last Week
+	auth2_client = fitbitAuthorize()
+	fitbitWeekData(auth2_client)
+
 	#Verify tempo correctness
 	#testsong = "We Are the Winx"
 	#ident = "62DhR27lWUHYHuD9A3zSrB"
 	#print(f"song: {testsong} has {getTempo(sp,ident)} tempo")
 
-	#Load playlist.csv Datafile
-	df = pd.read_csv('playlist.csv')
-	print(df.head())
-	
+	#Run BPM analysis on given playlist
+	#df = pd.read_csv('playlist_master.csv')
+	#playlistAnalysis(df)
 
-
-
+	print("Finished :)")
